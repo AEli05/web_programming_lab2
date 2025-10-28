@@ -34,12 +34,20 @@ function test() {
         const box_with_sign = document.createElement("input");
         box_with_sign.type = "checkbox";
 
+        box_with_sign.addEventListener("change", () => {
+            point.classList.toggle("done", box_with_sign.checked);
+        });
+
         const taskFull = document.createElement("span");
         taskFull.textContent = textTask;
 
         const deleteButton = document.createElement("button");
         deleteButton.type = "button";
         deleteButton.textContent = 'Удалить'
+
+        deleteButton.addEventListener("click", () => {
+            point.remove();
+        });
 
         point.append(box_with_sign, taskFull, deleteButton);
         list.append(point);
