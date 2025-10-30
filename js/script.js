@@ -2,6 +2,7 @@ let tasks = [];
 
 function createTaskElement(task, list) {
     const point = document.createElement("li");
+    point.draggable = true;
 
     const box_with_sign = document.createElement("input");
     box_with_sign.type = "checkbox";
@@ -11,6 +12,7 @@ function createTaskElement(task, list) {
         point.classList.toggle("done", box_with_sign.checked);
         task.done = box_with_sign.checked;
         saveTasks();
+        if (window.applyFilters) window.applyFilters();
     });
 
     const taskFull = document.createElement("span");
@@ -91,6 +93,16 @@ function createTaskElement(task, list) {
     point.append(box_with_sign, taskFull, timeEl, editBtn, deleteButton);
     point.classList.toggle("done", task.done);
 
+
+    point.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", task.text);
+        point.classList.add("dragging");
+    });
+
+    point.addEventListener("dragend", () => {
+        point.classList.remove("dragging");
+    });
+
     list.append(point);
 }
 
@@ -110,7 +122,7 @@ function test() {
     console.log("test");
 
     const title = document.createElement("h1");
-    title.textContent = "My TO-DO LIST";
+    title.textContent = "✨ My TO-DO LIST ✨";
     document.body.append(title);
 
     const container = document.createElement("div");
@@ -137,6 +149,33 @@ function test() {
     list.id = "listId"
     document.body.append(list);
 
+    list.addEventListener("dragover", (e) => {
+        e.preventDefault(); // обязательно, чтобы drop сработал
+
+        const dragging = document.querySelector(".dragging");
+        const siblings = [...list.querySelectorAll("li:not(.dragging)")];
+
+
+        const nextEl = siblings.find(el => e.clientY <= el.getBoundingClientRect().top + el.offsetHeight / 2);
+        if (nextEl) {
+            list.insertBefore(dragging, nextEl);
+        } else {
+            list.append(dragging);
+        }
+    });
+
+    list.addEventListener("drop", () => {
+        const newOrder = [];
+        for (const li of list.children) {
+            const text = li.querySelector("span").textContent;
+            const task = tasks.find(t => t.text === text);
+            if (task) newOrder.push(task);
+        }
+        tasks = newOrder;
+        saveTasks();
+    });
+
+
     const filterBar = document.createElement("div");
     const dateFilter = document.createElement("input");
     dateFilter.type = "date";
@@ -147,6 +186,40 @@ function test() {
     searchInput.placeholder = "Поиск по названию";
     filterBar.append(searchInput);
 
+    let statusFilter = "all";
+
+    const allBtn    = document.createElement("button");
+    allBtn.textContent = "Все";
+    allBtn.dataset.value = "all";
+
+    const activeBtn = document.createElement("button");
+    activeBtn.textContent = "Активные";
+    activeBtn.dataset.value = "active";
+
+    const doneBtn   = document.createElement("button");
+    doneBtn.textContent = "Выполненные";
+    doneBtn.dataset.value = "done";
+
+    filterBar.append(allBtn, activeBtn, doneBtn);
+
+    function updateStatusButtons() {
+        for (const b of [allBtn, activeBtn, doneBtn]) {
+            b.toggleAttribute("aria-pressed", b.dataset.value === statusFilter);
+        }
+    }
+
+    function setStatusFilter(val) {
+        statusFilter = val;
+        updateStatusButtons();
+        applyFilters();
+    }
+
+    allBtn   .addEventListener("click", () => setStatusFilter("all"));
+    activeBtn.addEventListener("click", () => setStatusFilter("active"));
+    doneBtn  .addEventListener("click", () => setStatusFilter("done"));
+
+    updateStatusButtons();
+
     document.body.insertBefore(filterBar, list);
 
     function applyFilters() {
@@ -156,13 +229,20 @@ function test() {
         for (const li of list.children) {
             const due  = li.dataset.due || "";
             const text = (li.querySelector("span")?.textContent || "").toLowerCase();
+            const isDone = li.classList.contains("done");
 
-            const matchDate = !qDate || due === qDate;
-            const matchText = !qText || text.includes(qText);
+            const matchDate   = !qDate || due === qDate;
+            const matchText   = !qText || text.includes(qText);
+            const matchStatus =
+                statusFilter === "all" ||
+                (statusFilter === "done"   && isDone) ||
+                (statusFilter === "active" && !isDone);
 
-            li.style.display = (matchDate && matchText) ? "" : "none";
+            li.style.display = (matchDate && matchText && matchStatus) ? "" : "none";
         }
     }
+
+    window.applyFilters = applyFilters;
 
 
     dateFilter.addEventListener("input", applyFilters);
@@ -187,6 +267,7 @@ function test() {
         saveTasks();
 
         createTaskElement(newTask, list);
+        applyFilters();
         input.value = "";
         dateInput.value = "";
     });
