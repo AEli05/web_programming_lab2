@@ -16,6 +16,59 @@ function createTaskElement(task, list) {
     const taskFull = document.createElement("span");
     taskFull.textContent = task.text;
 
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Редактировать";
+
+
+    editBtn.addEventListener("click", () => {
+        const inputEdit = document.createElement("input");
+        inputEdit.type = "text";
+        inputEdit.value = task.text;
+
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "Сохранить";
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Отмена";
+
+        point.replaceChild(inputEdit, taskFull);
+
+        editBtn.style.display = "none";
+        point.insertBefore(saveBtn, deleteButton);
+        point.insertBefore(cancelBtn, deleteButton);
+
+        saveBtn.addEventListener("click", () => {
+            const newText = inputEdit.value.trim();
+            if (!newText) { inputEdit.focus(); return; }
+
+            task.text = newText;
+            taskFull.textContent = newText;
+            saveTasks();
+
+            point.replaceChild(taskFull, inputEdit);
+            saveBtn.remove();
+            cancelBtn.remove();
+            editBtn.style.display = "";
+        });
+
+        inputEdit.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") saveBtn.click();
+            if (e.key === "Escape") cancelBtn.click();
+        });
+
+
+        cancelBtn.addEventListener("click", () => {
+            point.replaceChild(taskFull, inputEdit);
+            saveBtn.remove();
+            cancelBtn.remove();
+            editBtn.style.display = "";
+        });
+
+        inputEdit.focus();
+        inputEdit.select();
+    });
+
+
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.textContent = 'Удалить'
@@ -26,7 +79,7 @@ function createTaskElement(task, list) {
         saveTasks();
     });
 
-    point.append(box_with_sign, taskFull, deleteButton);
+    point.append(box_with_sign, taskFull, editBtn, deleteButton);
     point.classList.toggle("done", task.done);
 
     list.append(point);
