@@ -142,24 +142,39 @@ function test() {
     dateFilter.type = "date";
     filterBar.append(dateFilter);
 
+    const searchInput = document.createElement("input");
+    searchInput.type = "search";
+    searchInput.placeholder = "Поиск по названию";
+    filterBar.append(searchInput);
+
     document.body.insertBefore(filterBar, list);
 
-    function applyDateFilter() {
-        const q = dateFilter.value;
+    function applyFilters() {
+        const qDate = dateFilter.value;
+        const qText = (searchInput.value || "").toLowerCase().trim();
+
         for (const li of list.children) {
-            const due = li.dataset.due || "";
-            li.style.display = (!q || due === q) ? "" : "none";
+            const due  = li.dataset.due || "";
+            const text = (li.querySelector("span")?.textContent || "").toLowerCase();
+
+            const matchDate = !qDate || due === qDate;
+            const matchText = !qText || text.includes(qText);
+
+            li.style.display = (matchDate && matchText) ? "" : "none";
         }
     }
 
-    dateFilter.addEventListener("input", applyDateFilter);
+
+    dateFilter.addEventListener("input", applyFilters);
+    searchInput.addEventListener("input", applyFilters);
+
 
 
     for (const t of tasks) {
         createTaskElement(t, list);
     }
 
-    applyDateFilter();
+    applyFilters();
 
     ///новая запись
     button.addEventListener("click", () => {
