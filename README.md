@@ -1,5 +1,5 @@
 **To-Do List**
-деплой сайта по лр2 - [https://aeli05.github.io/web_programming_projects/](https://aeli05.github.io/web_programming_lab2/) Елизарова Анастасия Александровна, Web-программирование - WEB 3.2
+деплой сайта по лр2 - https://aeli05.github.io/web_programming_lab2/ Елизарова Анастасия Александровна, Web-программирование - WEB 3.2
 
 **Целью данной лабораторной работы являлось выполнение следующих пунктов:**
 
