@@ -16,6 +16,15 @@ function createTaskElement(task, list) {
     const taskFull = document.createElement("span");
     taskFull.textContent = task.text;
 
+    const timeEl = document.createElement("time");
+    if (task.due) {
+        timeEl.dateTime = task.due;
+        timeEl.textContent = task.due;
+    }
+
+    point.dataset.due = task.due || "";
+
+
     const editBtn = document.createElement("button");
     editBtn.textContent = "Редактировать";
 
@@ -79,7 +88,7 @@ function createTaskElement(task, list) {
         saveTasks();
     });
 
-    point.append(box_with_sign, taskFull, editBtn, deleteButton);
+    point.append(box_with_sign, taskFull, timeEl, editBtn, deleteButton);
     point.classList.toggle("done", task.done);
 
     list.append(point);
@@ -110,11 +119,15 @@ function test() {
     const input = document.createElement("input");
     input.type = "text";
     input.placeholder = 'Введите Вашу задачу......'
-    document.body.append(input);
+
+    const dateInput = document.createElement("input");
+    dateInput.type = "date";
 
     const button = document.createElement("button");
     button.textContent = 'Добавить'
-    document.body.append(button);
+
+    container.append(input, dateInput, button);
+
 
     button.addEventListener("click", () => {
         console.log("clicked the test button");
@@ -124,21 +137,43 @@ function test() {
     list.id = "listId"
     document.body.append(list);
 
+    const filterBar = document.createElement("div");
+    const dateFilter = document.createElement("input");
+    dateFilter.type = "date";
+    filterBar.append(dateFilter);
+
+    document.body.insertBefore(filterBar, list);
+
+    function applyDateFilter() {
+        const q = dateFilter.value;
+        for (const li of list.children) {
+            const due = li.dataset.due || "";
+            li.style.display = (!q || due === q) ? "" : "none";
+        }
+    }
+
+    dateFilter.addEventListener("input", applyDateFilter);
+
+
     for (const t of tasks) {
         createTaskElement(t, list);
     }
+
+    applyDateFilter();
 
     ///новая запись
     button.addEventListener("click", () => {
         const textTask = input.value.trim();
         if (!textTask) return;
 
-        const newTask = { text: textTask, done: false };
+        const due = dateInput.value || "";
+        const newTask = { text: textTask, done: false, due };
         tasks.push(newTask);
         saveTasks();
 
         createTaskElement(newTask, list);
         input.value = "";
+        dateInput.value = "";
     });
 }
 
